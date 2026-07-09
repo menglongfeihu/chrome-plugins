@@ -148,6 +148,10 @@ async function main() {
   allTabs = await getClosedTabs();
 
   updateCount(allTabs.length);
+
+  const scopeLabels = { title: '搜索标题', url: '搜索网址', both: '搜索全部' };
+  document.getElementById('searchInput').placeholder = scopeLabels[currentSettings.searchScope] || '搜索';
+
   renderList('');
 
   // search
