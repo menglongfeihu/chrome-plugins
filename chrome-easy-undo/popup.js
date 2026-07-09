@@ -65,6 +65,19 @@ function matches(tab, query, settings) {
 function createTabItem(tab, settings, onRemove) {
   const item = document.createElement('div');
   item.className = 'tab-item';
+  if (selectedIds.has(tab.id)) item.classList.add('selected');
+
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.className = 'tab-item-check';
+  checkbox.checked = selectedIds.has(tab.id);
+  checkbox.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (checkbox.checked) { selectedIds.add(tab.id); item.classList.add('selected'); }
+    else { selectedIds.delete(tab.id); item.classList.remove('selected'); }
+    updateOpenSelected();
+  });
+  item.appendChild(checkbox);
 
   if (settings.showFavicon) {
     const fav = document.createElement('img');
@@ -130,6 +143,14 @@ function createTabItem(tab, settings, onRemove) {
 
 let allTabs = [];
 let currentSettings = null;
+let selectedIds = new Set();
+
+function updateOpenSelected() {
+  const btn = document.getElementById('openSelected');
+  const n = selectedIds.size;
+  btn.style.display = n > 0 ? 'inline-flex' : 'none';
+  btn.textContent = `打开选中 (${n})`;
+}
 
 function renderList(query) {
   const list = document.getElementById('tabList');
@@ -195,6 +216,23 @@ async function main() {
   // settings
   document.getElementById('settingsBtn').addEventListener('click', () => {
     chrome.runtime.openOptionsPage();
+  });
+
+  // open selected
+  document.getElementById('openSelected').addEventListener('click', async () => {
+    const tabs = allTabs.filter(t => selectedIds.has(t.id));
+    for (const t of tabs) {
+      if (currentSettings.removeOnRestore) await removeClosedTab(t.id);
+      chrome.tabs.create({ url: t.url, active: false });
+    }
+    if (currentSettings.removeOnRestore) {
+      allTabs = allTabs.filter(t => !selectedIds.has(t.id));
+      renderList(document.getElementById('searchInput').value.trim());
+      updateCount(allTabs.length);
+    }
+    selectedIds.clear();
+    updateOpenSelected();
+    if (currentSettings.closeOnRestore) window.close();
   });
 }
 
