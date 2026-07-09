@@ -213,6 +213,27 @@ async function main() {
     updateCount(0);
   });
 
+  // 全选
+  document.getElementById('selectAll').addEventListener('click', () => {
+    const query = searchInput.value.trim();
+    const visible = allTabs.filter(tab => matches(tab, query, currentSettings));
+    visible.forEach(t => selectedIds.add(t.id));
+    renderList(query);
+    updateOpenSelected();
+  });
+
+  // 反选
+  document.getElementById('invertSelect').addEventListener('click', () => {
+    const query = searchInput.value.trim();
+    const visible = allTabs.filter(tab => matches(tab, query, currentSettings));
+    visible.forEach(t => {
+      if (selectedIds.has(t.id)) selectedIds.delete(t.id);
+      else selectedIds.add(t.id);
+    });
+    renderList(query);
+    updateOpenSelected();
+  });
+
   // settings
   document.getElementById('settingsBtn').addEventListener('click', () => {
     chrome.runtime.openOptionsPage();

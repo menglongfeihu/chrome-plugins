@@ -93,6 +93,23 @@ body {
 
 .tab-count:empty { display: none; }
 
+.sel-btn {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--btn-text);
+  background: none;
+  border: 1px solid var(--btn-border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sel-btn:hover { background: var(--bg-hover); color: var(--text); }
+
 .clear-all {
   margin-left: auto;
   display: flex;
