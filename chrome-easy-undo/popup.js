@@ -147,9 +147,13 @@ let selectedIds = new Set();
 
 function updateOpenSelected() {
   const btn = document.getElementById('openSelected');
+  const clearBtn = document.getElementById('clearAll');
   const n = selectedIds.size;
   btn.style.display = n > 0 ? 'inline-flex' : 'none';
   btn.textContent = `打开选中 (${n})`;
+  clearBtn.innerHTML = n > 0
+    ? `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><path d="M6 2h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M2 4.5h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M3.5 4.5l.75 9.5a.5.5 0 00.5.5h6.5a.5.5 0 00.5-.5l.75-9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 7v5M9.5 7v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>清空选中 (${n})`
+    : `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><path d="M6 2h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M2 4.5h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M3.5 4.5l.75 9.5a.5.5 0 00.5.5h6.5a.5.5 0 00.5-.5l.75-9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 7v5M9.5 7v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>清空`;
 }
 
 function renderList(query) {
@@ -204,13 +208,23 @@ async function main() {
     renderList('');
   });
 
-  // clear all
+  // clear all / clear selected
   document.getElementById('clearAll').addEventListener('click', async () => {
-    await chrome.storage.local.set({ closedTabs: [] });
-    chrome.runtime.sendMessage({ type: 'updateBadge' }).catch(() => {});
-    allTabs = [];
-    renderList('');
-    updateCount(0);
+    if (selectedIds.size > 0) {
+      allTabs = allTabs.filter(t => !selectedIds.has(t.id));
+      await chrome.storage.local.set({ closedTabs: allTabs });
+      chrome.runtime.sendMessage({ type: 'updateBadge' }).catch(() => {});
+      selectedIds.clear();
+      updateOpenSelected();
+      renderList(searchInput.value.trim());
+      updateCount(allTabs.length);
+    } else {
+      await chrome.storage.local.set({ closedTabs: [] });
+      chrome.runtime.sendMessage({ type: 'updateBadge' }).catch(() => {});
+      allTabs = [];
+      renderList('');
+      updateCount(0);
+    }
   });
 
   // 全选
