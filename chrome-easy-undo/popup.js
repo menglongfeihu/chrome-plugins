@@ -13,6 +13,8 @@ const DEFAULTS = {
   showBadge: true,
   caseSensitive: false,
   closeOnRestore: false,
+  removeOnRestore: false,
+  deduplicateUrls: false,
   searchScope: 'title',
   theme: 'auto',
   blockedUrls: [],
@@ -110,9 +112,17 @@ function createTabItem(tab, settings, onRemove) {
   });
   item.appendChild(del);
 
-  item.addEventListener('click', () => {
-    chrome.tabs.create({ url: tab.url });
-    if (settings.closeOnRestore) window.close();
+  item.addEventListener('click', async () => {
+    if (settings.removeOnRestore) {
+      await removeClosedTab(tab.id);
+      item.remove();
+    }
+    if (settings.closeOnRestore) {
+      chrome.tabs.create({ url: tab.url });
+      window.close();
+    } else {
+      chrome.tabs.create({ url: tab.url, active: false });
+    }
   });
 
   return item;

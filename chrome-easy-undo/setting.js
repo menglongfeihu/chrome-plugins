@@ -8,6 +8,8 @@ const DEFAULTS = {
   showBadge: true,
   caseSensitive: false,
   closeOnRestore: false,
+  removeOnRestore: false,
+  deduplicateUrls: false,
   searchScope: 'title',
   theme: 'auto',
   blockedUrls: [],
@@ -68,6 +70,8 @@ function collectSettings() {
     showBadge: getToggle('showBadge'),
     caseSensitive: getToggle('caseSensitive'),
     closeOnRestore: getToggle('closeOnRestore'),
+    removeOnRestore: getToggle('removeOnRestore'),
+    deduplicateUrls: getToggle('deduplicateUrls'),
     theme: getSeg('themeSeg') || DEFAULTS.theme,
     searchScope: getSeg('searchScopeSeg') || DEFAULTS.searchScope,
     blockedUrls: [...blockedUrls],
@@ -145,6 +149,8 @@ async function init() {
   setToggle('showBadge', settings.showBadge);
   setToggle('caseSensitive', settings.caseSensitive);
   setToggle('closeOnRestore', settings.closeOnRestore);
+  setToggle('removeOnRestore', settings.removeOnRestore);
+  setToggle('deduplicateUrls', settings.deduplicateUrls);
 
   setSeg('themeSeg', settings.theme);
   setSeg('searchScopeSeg', settings.searchScope);
@@ -152,7 +158,7 @@ async function init() {
   renderBlockedList();
 
   // toggles
-  ['showTime', 'showFavicon', 'showUrl', 'showBadge', 'caseSensitive', 'closeOnRestore'].forEach(id => {
+  ['showTime', 'showFavicon', 'showUrl', 'showBadge', 'caseSensitive', 'closeOnRestore', 'removeOnRestore', 'deduplicateUrls'].forEach(id => {
     document.getElementById(id).addEventListener('click', () => {
       setToggle(id, !getToggle(id));
       autoSave();

@@ -6,6 +6,7 @@ const DEFAULTS = {
   maxStored: 300,
   showBadge: true,
   blockedUrls: [],
+  deduplicateUrls: false,
 };
 
 async function getSettings() {
@@ -52,6 +53,12 @@ async function recordClosedTab(tabId) {
   if (blocked.some(p => p && info.url.includes(p))) return;
 
   const list = await getClosedTabs();
+
+  if (settings.deduplicateUrls) {
+    const idx = list.findIndex(t => t.url === info.url);
+    if (idx !== -1) list.splice(idx, 1);
+  }
+
   list.unshift({
     id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random()}`,
     url: info.url,

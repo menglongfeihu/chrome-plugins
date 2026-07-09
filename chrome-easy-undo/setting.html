@@ -40,7 +40,7 @@
         <div class="field-row">
           <span class="field-label">▷ 最多保存条数</span>
           <div class="slider-wrap">
-            <input type="range" id="maxStored" min="50" max="1000" step="50">
+            <input type="range" id="maxStored" min="5" max="500" step="5">
             <span class="slider-val"><span id="maxStoredVal">300</span> 条</span>
           </div>
         </div>
@@ -123,6 +123,17 @@
           <span class="field-label">▷ 恢复后关闭弹窗</span>
           <span class="toggle" id="closeOnRestore"><span class="toggle-knob"></span></span>
         </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 恢复后从列表移除</span>
+          <span class="toggle" id="removeOnRestore"><span class="toggle-knob"></span></span>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 相同网址去重</span>
+          <span class="toggle" id="deduplicateUrls"><span class="toggle-knob"></span></span>
+        </div>
+        
       </section>
 
       <!-- 屏蔽 -->
