@@ -115,8 +115,8 @@ function createTabItem(tab, settings, onRemove) {
 
   const del = document.createElement('button');
   del.className = 'delete-btn';
-  del.textContent = '×';
   del.title = '从列表中移除';
+  del.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M6 2h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M2 4.5h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M3.5 4.5l.75 9.5a.5.5 0 00.5.5h6.5a.5.5 0 00.5-.5l.75-9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 7v5M9.5 7v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
   del.addEventListener('click', async (e) => {
     e.stopPropagation();
     await removeClosedTab(tab.id);
