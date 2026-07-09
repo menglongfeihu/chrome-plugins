@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>快恢复</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img class="brand-icon" src="icons/icon32.png" alt="">
+      <span class="title">快恢复</span>
+      <button class="clear-all" id="clearAll">清空</button>
+    </div>
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 16 16" fill="none">
+        <circle cx="6.5" cy="6.5" r="4" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M10 10l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input class="search-input" id="searchInput" type="text" placeholder="搜索…">
+      <button class="search-clear" id="searchClear" style="display:none">×</button>
+    </div>
+    <div class="tab-list" id="tabList"></div>
+    <div class="empty" id="emptyState">没有最近关闭的标签页</div>
+    <div class="footer">
+      <button class="settings-link" id="settingsBtn">⚙ 设置</button>
+      <span class="tab-count" id="tabCount"></span>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

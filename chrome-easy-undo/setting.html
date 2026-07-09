@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>快恢复 - 设置</title>
+  <link rel="stylesheet" href="setting.css">
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <img src="icons/icon32.png" alt="logo" class="logo">
+      <div>
+        <h1 class="page-title">快恢复</h1>
+        <p class="page-subtitle">快速恢复最近关闭的标签页</p>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- 界面 -->
+      <section class="section">
+        <h2 class="section-title">界面</h2>
+
+        <div class="field-row">
+          <span class="field-label">▷ 显示宽度</span>
+          <div class="slider-wrap">
+            <input type="range" id="popupWidth" min="300" max="600" step="10">
+            <span class="slider-val"><span id="popupWidthVal">380</span>px</span>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 最多保存条数</span>
+          <div class="slider-wrap">
+            <input type="range" id="maxStored" min="50" max="1000" step="50">
+            <span class="slider-val"><span id="maxStoredVal">300</span> 条</span>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 显示时间</span>
+          <span class="toggle" id="showTime"><span class="toggle-knob"></span></span>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 显示网站图标</span>
+          <span class="toggle" id="showFavicon"><span class="toggle-knob"></span></span>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 显示页面网址</span>
+          <span class="toggle" id="showUrl"><span class="toggle-knob"></span></span>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 图标显示数量</span>
+          <span class="toggle" id="showBadge"><span class="toggle-knob"></span></span>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 主题</span>
+          <div class="seg" id="themeSeg">
+            <button class="seg-btn" data-value="auto">跟随系统</button>
+            <button class="seg-btn" data-value="light">亮色</button>
+            <button class="seg-btn" data-value="dark">暗色</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 清理 -->
+      <section class="section">
+        <h2 class="section-title">清理</h2>
+
+        <div class="field-row">
+          <span class="field-label">▷ 清空全部记录</span>
+          <button class="btn-action btn-warn" id="clearAll">清空全部记录</button>
+          <span class="action-tip" id="clearAllTip"></span>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 清空 n 天前记录</span>
+          <div class="slider-wrap">
+            <input type="range" id="clearDays" min="1" max="30" step="1" value="5">
+            <span class="slider-val"><span id="clearDaysLabel">5</span> 天</span>
+          </div>
+          <button class="btn-action btn-warn" id="clearByDays">清理 <span id="clearDaysBtn">5</span> 天前的记录</button>
+          <span class="action-tip" id="clearByDaysTip"></span>
+        </div>
+      </section>
+
+      <!-- 功能 -->
+      <section class="section">
+        <h2 class="section-title">功能</h2>
+
+        <div class="field-row">
+          <span class="field-label">▷ 自定义热键</span>
+          <button class="btn-action" id="openShortcuts">编辑自定义热键</button>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 搜索范围</span>
+          <div class="seg" id="searchScopeSeg">
+            <button class="seg-btn" data-value="title">标题</button>
+            <button class="seg-btn" data-value="url">网址</button>
+            <button class="seg-btn" data-value="both">标题+网址</button>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 大小写敏感搜索</span>
+          <span class="toggle" id="caseSensitive"><span class="toggle-knob"></span></span>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">▷ 恢复后关闭弹窗</span>
+          <span class="toggle" id="closeOnRestore"><span class="toggle-knob"></span></span>
+        </div>
+      </section>
+
+      <!-- 屏蔽 -->
+      <section class="section">
+        <h2 class="section-title">屏蔽</h2>
+
+        <div class="field-row" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+          <div style="display:flex; align-items:center; gap:10px; width:100%">
+            <span class="field-label" style="width:auto;">▷ 这些网址不被记录</span>
+            <button class="btn-action" id="addBlockedUrl">+ 添加屏蔽网址</button>
+          </div>
+          <div class="blocked-input-wrap" id="blockedInputWrap" style="display:none; width:100%">
+            <input class="text-input" id="blockedUrlInput" type="text" placeholder="输入域名或关键词，如 example.com">
+            <button class="btn-action" id="confirmBlockedUrl">确定</button>
+            <button class="btn-ghost" id="cancelBlockedUrl">取消</button>
+          </div>
+          <div class="blocked-list" id="blockedList"></div>
+        </div>
+      </section>
+
+      <!-- 数据管理 -->
+      <section class="section">
+        <h2 class="section-title">数据管理</h2>
+
+        <div class="field-row">
+          <span class="field-label">▷ 重置所有设置</span>
+          <button class="btn-ghost" id="resetAll">恢复默认设置</button>
+          <span class="action-tip" id="resetTip"></span>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="page-footer">
+      <button class="btn-save" id="save">保存设置</button>
+      <span class="save-tip" id="saveTip"></span>
+    </footer>
+  </div>
+
+  <script src="setting.js"></script>
+</body>
+</html>
