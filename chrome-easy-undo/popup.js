@@ -6,6 +6,7 @@ const FAV_FALLBACK =
 const DEFAULTS = {
   maxStored: 300,
   popupWidth: 380,
+  popupHeight: 400,
   showFavicon: true,
   showUrl: true,
   showTime: true,
@@ -143,6 +144,7 @@ function updateCount(n) {
 async function main() {
   currentSettings = await getSettings();
   document.body.style.width = `${currentSettings.popupWidth}px`;
+  document.getElementById('tabList').style.maxHeight = `${currentSettings.popupHeight}px`;
   applyTheme(currentSettings.theme);
 
   allTabs = await getClosedTabs();

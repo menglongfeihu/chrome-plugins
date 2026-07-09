@@ -30,6 +30,14 @@
         </div>
 
         <div class="field-row">
+          <span class="field-label">▷ 显示高度</span>
+          <div class="slider-wrap">
+            <input type="range" id="popupHeight" min="200" max="800" step="20">
+            <span class="slider-val"><span id="popupHeightVal">400</span>px</span>
+          </div>
+        </div>
+
+        <div class="field-row">
           <span class="field-label">▷ 最多保存条数</span>
           <div class="slider-wrap">
             <input type="range" id="maxStored" min="50" max="1000" step="50">
@@ -148,10 +156,6 @@
 
     </main>
 
-    <footer class="page-footer">
-      <button class="btn-save" id="save">保存设置</button>
-      <span class="save-tip" id="saveTip"></span>
-    </footer>
   </div>
 
   <script src="setting.js"></script>

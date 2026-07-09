@@ -1,6 +1,7 @@
 const DEFAULTS = {
   maxStored: 300,
   popupWidth: 380,
+  popupHeight: 400,
   showFavicon: true,
   showUrl: true,
   showTime: true,
@@ -53,17 +54,29 @@ function getSeg(segId) {
   return active ? active.dataset.value : null;
 }
 
-// slider
-function initSlider(id, valId, settings, key) {
-  const slider = document.getElementById(id);
-  const label = document.getElementById(valId);
-  slider.value = settings[key];
-  label.textContent = settings[key];
-  slider.addEventListener('input', () => { label.textContent = slider.value; });
-}
-
 // blocked urls
 let blockedUrls = [];
+
+function collectSettings() {
+  return {
+    maxStored: parseInt(document.getElementById('maxStored').value, 10),
+    popupWidth: parseInt(document.getElementById('popupWidth').value, 10),
+    popupHeight: parseInt(document.getElementById('popupHeight').value, 10),
+    showTime: getToggle('showTime'),
+    showFavicon: getToggle('showFavicon'),
+    showUrl: getToggle('showUrl'),
+    showBadge: getToggle('showBadge'),
+    caseSensitive: getToggle('caseSensitive'),
+    closeOnRestore: getToggle('closeOnRestore'),
+    theme: getSeg('themeSeg') || DEFAULTS.theme,
+    searchScope: getSeg('searchScopeSeg') || DEFAULTS.searchScope,
+    blockedUrls: [...blockedUrls],
+  };
+}
+
+async function autoSave() {
+  await saveSettings(collectSettings());
+}
 
 function renderBlockedList() {
   const list = document.getElementById('blockedList');
@@ -79,6 +92,7 @@ function renderBlockedList() {
     rm.addEventListener('click', () => {
       blockedUrls.splice(i, 1);
       renderBlockedList();
+      autoSave();
     });
     tag.appendChild(rm);
     list.appendChild(tag);
@@ -97,8 +111,33 @@ async function init() {
   const settings = await loadSettings();
   blockedUrls = [...(settings.blockedUrls || [])];
 
-  initSlider('popupWidth', 'popupWidthVal', settings, 'popupWidth');
-  initSlider('maxStored', 'maxStoredVal', settings, 'maxStored');
+  // sliders
+  const popupWidthSlider = document.getElementById('popupWidth');
+  const popupWidthVal = document.getElementById('popupWidthVal');
+  popupWidthSlider.value = settings.popupWidth;
+  popupWidthVal.textContent = settings.popupWidth;
+  popupWidthSlider.addEventListener('input', () => {
+    popupWidthVal.textContent = popupWidthSlider.value;
+    autoSave();
+  });
+
+  const popupHeightSlider = document.getElementById('popupHeight');
+  const popupHeightVal = document.getElementById('popupHeightVal');
+  popupHeightSlider.value = settings.popupHeight;
+  popupHeightVal.textContent = settings.popupHeight;
+  popupHeightSlider.addEventListener('input', () => {
+    popupHeightVal.textContent = popupHeightSlider.value;
+    autoSave();
+  });
+
+  const maxStoredSlider = document.getElementById('maxStored');
+  const maxStoredVal = document.getElementById('maxStoredVal');
+  maxStoredSlider.value = settings.maxStored;
+  maxStoredVal.textContent = settings.maxStored;
+  maxStoredSlider.addEventListener('input', () => {
+    maxStoredVal.textContent = maxStoredSlider.value;
+    autoSave();
+  });
 
   setToggle('showTime', settings.showTime);
   setToggle('showFavicon', settings.showFavicon);
@@ -114,7 +153,10 @@ async function init() {
 
   // toggles
   ['showTime', 'showFavicon', 'showUrl', 'showBadge', 'caseSensitive', 'closeOnRestore'].forEach(id => {
-    document.getElementById(id).addEventListener('click', () => setToggle(id, !getToggle(id)));
+    document.getElementById(id).addEventListener('click', () => {
+      setToggle(id, !getToggle(id));
+      autoSave();
+    });
   });
 
   // seg clicks
@@ -123,6 +165,7 @@ async function init() {
       const seg = btn.closest('.seg');
       seg.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      autoSave();
     });
   });
 
@@ -167,6 +210,7 @@ async function init() {
     if (val && !blockedUrls.includes(val)) {
       blockedUrls.push(val);
       renderBlockedList();
+      autoSave();
     }
     document.getElementById('blockedUrlInput').value = '';
     document.getElementById('blockedInputWrap').style.display = 'none';
@@ -188,30 +232,6 @@ async function init() {
     blockedUrls = [...(DEFAULTS.blockedUrls || [])];
     await init();
     showTip('resetTip', '已恢复默认');
-  });
-
-  // save
-  document.getElementById('save').addEventListener('click', async () => {
-    const s = {
-      maxStored: parseInt(document.getElementById('maxStored').value, 10),
-      popupWidth: parseInt(document.getElementById('popupWidth').value, 10),
-      showTime: getToggle('showTime'),
-      showFavicon: getToggle('showFavicon'),
-      showUrl: getToggle('showUrl'),
-      showBadge: getToggle('showBadge'),
-      caseSensitive: getToggle('caseSensitive'),
-      closeOnRestore: getToggle('closeOnRestore'),
-      theme: getSeg('themeSeg') || DEFAULTS.theme,
-      searchScope: getSeg('searchScopeSeg') || DEFAULTS.searchScope,
-      blockedUrls: [...blockedUrls],
-    };
-    await saveSettings(s);
-    const tip = document.getElementById('saveTip');
-    tip.textContent = '保存成功';
-    // 重播动画：先移除再强制 reflow，否则连续点击不会重新触发
-    tip.classList.remove('rise');
-    void tip.offsetWidth;
-    tip.classList.add('rise');
   });
 }
 
