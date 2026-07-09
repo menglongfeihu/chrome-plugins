@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "快恢复",
-  "version": "1.1.0",
-  "description": "快速查看和恢复最近关闭的标签页，悬停可删除记录",
+  "version": "1.2.0",
+  "description": "查看并恢复最近关闭的标签页，支持搜索、批量选择、屏蔽规则、主题切换，历史最多保存 300 条。",
   "permissions": ["tabs", "storage"],
   "options_page": "setting.html",
   "background": {
