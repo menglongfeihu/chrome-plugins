@@ -129,6 +129,7 @@ function createTabItem(tab, settings, onRemove) {
     if (settings.removeOnRestore) {
       await removeClosedTab(tab.id);
       item.remove();
+      onRemove();
     }
     if (settings.closeOnRestore) {
       chrome.tabs.create({ url: tab.url });
@@ -166,6 +167,7 @@ function renderList(query) {
     allTabs = allTabs.filter(t => t.id !== tab.id);
     renderList(document.getElementById('searchInput').value.trim());
     updateCount(allTabs.length);
+    syncBadge(allTabs.length);
   })));
 
   empty.style.display = filtered.length === 0 ? 'block' : 'none';
@@ -174,6 +176,13 @@ function renderList(query) {
 function updateCount(n) {
   const el = document.getElementById('tabCount');
   el.textContent = n > 0 ? `共 ${n} 条记录` : '';
+}
+
+async function syncBadge(count) {
+  const settings = await getSettings();
+  if (!settings.showBadge) { chrome.action.setBadgeText({ text: '' }); return; }
+  chrome.action.setBadgeText({ text: count > 0 ? String(count) : '' });
+  chrome.action.setBadgeBackgroundColor({ color: '#3b82f6' });
 }
 
 async function main() {
@@ -213,17 +222,17 @@ async function main() {
     if (selectedIds.size > 0) {
       allTabs = allTabs.filter(t => !selectedIds.has(t.id));
       await chrome.storage.local.set({ closedTabs: allTabs });
-      chrome.runtime.sendMessage({ type: 'updateBadge' }).catch(() => {});
       selectedIds.clear();
       updateOpenSelected();
       renderList(searchInput.value.trim());
       updateCount(allTabs.length);
+      syncBadge(allTabs.length);
     } else {
       await chrome.storage.local.set({ closedTabs: [] });
-      chrome.runtime.sendMessage({ type: 'updateBadge' }).catch(() => {});
       allTabs = [];
       renderList('');
       updateCount(0);
+      syncBadge(0);
     }
   });
 
@@ -264,6 +273,7 @@ async function main() {
       allTabs = allTabs.filter(t => !selectedIds.has(t.id));
       renderList(document.getElementById('searchInput').value.trim());
       updateCount(allTabs.length);
+      syncBadge(allTabs.length);
     }
     selectedIds.clear();
     updateOpenSelected();
