@@ -5,6 +5,7 @@ const FAV_FALLBACK =
 
 const DEFAULTS = {
   maxStored: 300,
+  pageSize: 20,
   popupWidth: 380,
   popupHeight: 400,
   showFavicon: true,
@@ -145,6 +146,7 @@ function createTabItem(tab, settings, onRemove) {
 let allTabs = [];
 let currentSettings = null;
 let selectedIds = new Set();
+let currentPage = 1;
 
 function updateOpenSelected() {
   const btn = document.getElementById('openSelected');
@@ -157,13 +159,30 @@ function updateOpenSelected() {
     : `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><path d="M6 2h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M2 4.5h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M3.5 4.5l.75 9.5a.5.5 0 00.5.5h6.5a.5.5 0 00.5-.5l.75-9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 7v5M9.5 7v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>清空`;
 }
 
+function renderPagination(totalPages) {
+  const bar = document.getElementById('pagination');
+  if (totalPages <= 1) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  document.getElementById('pgInfo').textContent = `${currentPage} / ${totalPages}`;
+  document.getElementById('pgFirst').disabled = currentPage === 1;
+  document.getElementById('pgPrev').disabled = currentPage === 1;
+  document.getElementById('pgNext').disabled = currentPage === totalPages;
+  document.getElementById('pgLast').disabled = currentPage === totalPages;
+  document.getElementById('pgGoto').max = totalPages;
+}
+
 function renderList(query) {
   const list = document.getElementById('tabList');
   const empty = document.getElementById('emptyState');
   list.innerHTML = '';
 
   const filtered = allTabs.filter(tab => matches(tab, query, currentSettings));
-  filtered.forEach(tab => list.appendChild(createTabItem(tab, currentSettings, () => {
+  const pageSize = (currentSettings && currentSettings.pageSize) || 20;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * pageSize;
+  filtered.slice(start, start + pageSize).forEach(tab => list.appendChild(createTabItem(tab, currentSettings, () => {
     allTabs = allTabs.filter(t => t.id !== tab.id);
     renderList(document.getElementById('searchInput').value.trim());
     updateCount(allTabs.length);
@@ -171,6 +190,7 @@ function renderList(query) {
   })));
 
   empty.style.display = filtered.length === 0 ? 'block' : 'none';
+  renderPagination(totalPages);
 }
 
 function updateCount(n) {
@@ -207,6 +227,7 @@ async function main() {
   searchInput.addEventListener('input', () => {
     const q = searchInput.value.trim();
     searchClear.style.display = q ? 'block' : 'none';
+    currentPage = 1;
     renderList(q);
   });
 
@@ -214,7 +235,40 @@ async function main() {
     searchInput.value = '';
     searchClear.style.display = 'none';
     searchInput.focus();
+    currentPage = 1;
     renderList('');
+  });
+
+  // 分页
+  const getQuery = () => searchInput.value.trim();
+  document.getElementById('pgFirst').addEventListener('click', () => {
+    currentPage = 1;
+    renderList(getQuery());
+  });
+  document.getElementById('pgPrev').addEventListener('click', () => {
+    currentPage--;
+    renderList(getQuery());
+  });
+  document.getElementById('pgNext').addEventListener('click', () => {
+    currentPage++;
+    renderList(getQuery());
+  });
+  document.getElementById('pgLast').addEventListener('click', () => {
+    const filtered = allTabs.filter(tab => matches(tab, getQuery(), currentSettings));
+    const pageSize = currentSettings.pageSize || 20;
+    currentPage = Math.max(1, Math.ceil(filtered.length / pageSize));
+    renderList(getQuery());
+  });
+  document.getElementById('pgGotoBtn').addEventListener('click', () => {
+    const val = parseInt(document.getElementById('pgGoto').value, 10);
+    if (!isNaN(val) && val >= 1) {
+      currentPage = val;
+      renderList(getQuery());
+      document.getElementById('pgGoto').value = '';
+    }
+  });
+  document.getElementById('pgGoto').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('pgGotoBtn').click();
   });
 
   // clear all / clear selected

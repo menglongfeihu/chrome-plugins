@@ -1,5 +1,6 @@
 const DEFAULTS = {
   maxStored: 300,
+  pageSize: 20,
   popupWidth: 380,
   popupHeight: 400,
   showFavicon: true,
@@ -62,6 +63,7 @@ let blockedUrls = [];
 function collectSettings() {
   return {
     maxStored: parseInt(document.getElementById('maxStored').value, 10),
+    pageSize: parseInt(document.getElementById('pageSize').value, 10),
     popupWidth: parseInt(document.getElementById('popupWidth').value, 10),
     popupHeight: parseInt(document.getElementById('popupHeight').value, 10),
     showTime: getToggle('showTime'),
@@ -140,6 +142,15 @@ async function init() {
   maxStoredVal.textContent = settings.maxStored;
   maxStoredSlider.addEventListener('input', () => {
     maxStoredVal.textContent = maxStoredSlider.value;
+    autoSave();
+  });
+
+  const pageSizeSlider = document.getElementById('pageSize');
+  const pageSizeVal = document.getElementById('pageSizeVal');
+  pageSizeSlider.value = settings.pageSize;
+  pageSizeVal.textContent = settings.pageSize;
+  pageSizeSlider.addEventListener('input', () => {
+    pageSizeVal.textContent = pageSizeSlider.value;
     autoSave();
   });
 
