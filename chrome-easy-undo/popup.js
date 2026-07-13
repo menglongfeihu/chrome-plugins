@@ -208,7 +208,7 @@ async function syncBadge(count) {
 async function main() {
   currentSettings = await getSettings();
   document.body.style.width = `${currentSettings.popupWidth}px`;
-  document.getElementById('tabList').style.maxHeight = `${currentSettings.popupHeight}px`;
+  document.body.style.height = `${currentSettings.popupHeight}px`;
   applyTheme(currentSettings.theme);
 
   allTabs = await getClosedTabs();

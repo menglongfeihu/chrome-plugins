@@ -67,6 +67,7 @@
 
 body {
   width: 380px;
+  height: 400px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
   font-size: 15px;
   color: var(--text);
@@ -75,7 +76,7 @@ body {
   overflow: hidden;
 }
 
-.container { display: flex; flex-direction: column; }
+.container { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 
 .header {
   display: flex;
@@ -192,7 +193,7 @@ body {
 
 .search-clear:hover { color: var(--text); }
 
-.tab-list { overflow-y: auto; max-height: 400px; }
+.tab-list { flex: 1; overflow-y: auto; min-height: 0; }
 
 .tab-item {
   display: flex;
@@ -340,56 +341,83 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border-top: 1px solid var(--border-light);
-  background: var(--bg);
+  gap: 5px;
+  padding: 8px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-header);
 }
 
 .pg-btn {
-  min-width: 28px;
-  height: 26px;
+  min-width: 30px;
+  height: 28px;
   border: 1px solid var(--btn-border);
   background: var(--bg);
   color: var(--btn-text);
-  border-radius: 4px;
-  font-size: 13px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   font-family: inherit;
-  padding: 0 6px;
-  transition: background 0.12s, color 0.12s;
+  padding: 0 8px;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
   line-height: 1;
 }
 
 .pg-btn:hover:not(:disabled) {
-  background: var(--bg-hover);
-  color: var(--text);
+  background: var(--sel-btn-bg);
+  color: var(--sel-btn-color);
+  border-color: var(--sel-btn-border);
 }
 
 .pg-btn:disabled {
-  opacity: 0.35;
+  opacity: 0.3;
   cursor: default;
+}
+
+.pg-btn-go {
+  font-size: 12px;
+  color: #fff;
+  background: #3b82f6;
+  border-color: #3b82f6;
+  font-weight: 600;
+}
+
+.pg-btn-go:hover:not(:disabled) {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
 }
 
 .pg-info {
   font-size: 12px;
   color: var(--text-sub);
   white-space: nowrap;
-  padding: 0 4px;
+  padding: 0 8px;
+  background: var(--border-light);
+  border-radius: 10px;
+  height: 22px;
+  line-height: 22px;
+  min-width: 54px;
+  text-align: center;
 }
 
 .pg-goto-input {
-  width: 40px;
-  height: 26px;
+  width: 70px;
+  height: 28px;
   border: 1px solid var(--btn-border);
   background: var(--bg);
   color: var(--text);
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
   font-family: inherit;
   text-align: center;
   outline: none;
-  padding: 0 4px;
+  padding: 0 6px;
+  transition: border-color 0.12s;
+}
+
+.pg-goto-input:focus {
+  border-color: #3b82f6;
 }
 
 .pg-goto-input::-webkit-inner-spin-button,
