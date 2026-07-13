@@ -31,6 +31,17 @@ async function getClosedTabs() {
   return r.closedTabs || [];
 }
 
+async function focusOrOpenTab(url, activate = true) {
+  const found = await chrome.tabs.query({ url });
+  if (found.length > 0) {
+    const t = found[found.length - 1];
+    await chrome.tabs.update(t.id, { active: activate });
+    if (activate) await chrome.windows.update(t.windowId, { focused: true });
+    return t;
+  }
+  return chrome.tabs.create({ url, active: activate });
+}
+
 async function removeClosedTab(id) {
   const list = await getClosedTabs();
   const next = list.filter(t => t.id !== id);
@@ -132,12 +143,8 @@ function createTabItem(tab, settings, onRemove) {
       item.remove();
       onRemove();
     }
-    if (settings.closeOnRestore) {
-      chrome.tabs.create({ url: tab.url });
-      window.close();
-    } else {
-      chrome.tabs.create({ url: tab.url, active: false });
-    }
+    await focusOrOpenTab(tab.url, true);
+    if (settings.closeOnRestore) window.close();
   });
 
   return item;
@@ -319,9 +326,10 @@ async function main() {
   // open selected
   document.getElementById('openSelected').addEventListener('click', async () => {
     const tabs = allTabs.filter(t => selectedIds.has(t.id));
-    for (const t of tabs) {
+    for (let i = 0; i < tabs.length; i++) {
+      const t = tabs[i];
       if (currentSettings.removeOnRestore) await removeClosedTab(t.id);
-      chrome.tabs.create({ url: t.url, active: false });
+      await focusOrOpenTab(t.url, i === tabs.length - 1);
     }
     if (currentSettings.removeOnRestore) {
       allTabs = allTabs.filter(t => !selectedIds.has(t.id));
