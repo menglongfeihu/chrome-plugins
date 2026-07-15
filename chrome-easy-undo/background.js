@@ -1,6 +1,8 @@
 // 自维护「最近关闭」历史：监听标签关闭事件，写入 storage.local 持久保存。
-// onRemoved 触发时标签已无法查询，故在 onCreated/onUpdated 时把信息缓存进
-// storage.session（SW 重启后仍保留），关闭时再取出来存档。
+//
+// 浏览器强关时 SW 可能在写入完成前被终止，因此额外维护一份 openTabsSnapshot：
+// 实时把当前所有打开的标签写入 storage.local，下次启动时把快照里的标签补录为
+// 「关闭记录」，再清空快照。storage.local 持久化，不受浏览器关闭影响。
 
 const DEFAULTS = {
   maxStored: 300,
@@ -19,58 +21,90 @@ async function getClosedTabs() {
   return r.closedTabs || [];
 }
 
-// 只缓存真实网页，跳过内部页面
 function isTrackableUrl(url) {
   if (!url) return false;
   return /^https?:\/\//.test(url);
 }
 
-async function cacheTab(tab) {
-  if (!tab || tab.id == null || !isTrackableUrl(tab.url)) return;
-  await chrome.storage.session.set({
-    [`tab_${tab.id}`]: {
-      url: tab.url,
-      title: tab.title || tab.url,
-      favIconUrl: tab.favIconUrl || '',
-    },
-  });
-}
-
-async function popCachedTab(tabId) {
-  const key = `tab_${tabId}`;
-  const r = await chrome.storage.session.get(key);
-  const info = r[key];
-  if (info) await chrome.storage.session.remove(key);
-  return info;
-}
-
-async function recordClosedTab(tabId) {
-  const info = await popCachedTab(tabId);
-  if (!info || !info.url) return;
+// 把快照里的标签批量写入关闭历史
+async function flushSnapshotToHistory(snapshot) {
+  if (!snapshot || !Object.keys(snapshot).length) return;
 
   const settings = await getSettings();
   const blocked = settings.blockedUrls || [];
-  if (blocked.some(p => p && info.url.includes(p))) return;
-
   const list = await getClosedTabs();
+  const now = Date.now();
 
-  if (settings.deduplicateUrls) {
-    const idx = list.findIndex(t => t.url === info.url);
-    if (idx !== -1) list.splice(idx, 1);
+  for (const info of Object.values(snapshot)) {
+    if (!info.url || !isTrackableUrl(info.url)) continue;
+    if (blocked.some(p => p && info.url.includes(p))) continue;
+    if (settings.deduplicateUrls) {
+      const idx = list.findIndex(t => t.url === info.url);
+      if (idx !== -1) list.splice(idx, 1);
+    }
+    list.unshift({
+      id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random()}`,
+      url: info.url,
+      title: info.title,
+      favIconUrl: info.favIconUrl,
+      closedAt: now,
+    });
   }
-
-  list.unshift({
-    id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random()}`,
-    url: info.url,
-    title: info.title,
-    favIconUrl: info.favIconUrl,
-    closedAt: Date.now(),
-  });
 
   const max = settings.maxStored || DEFAULTS.maxStored;
   if (list.length > max) list.length = max;
   await chrome.storage.local.set({ closedTabs: list });
-  // storage.onChanged 会触发 updateBadge
+}
+
+// 更新 openTabsSnapshot：查询所有当前打开的标签，整体覆盖写入
+async function syncOpenTabsSnapshot() {
+  try {
+    const tabs = await chrome.tabs.query({});
+    const snapshot = {};
+    for (const tab of tabs) {
+      if (tab.id != null && isTrackableUrl(tab.url)) {
+        snapshot[`tab_${tab.id}`] = {
+          url: tab.url,
+          title: tab.title || tab.url,
+          favIconUrl: tab.favIconUrl || '',
+        };
+      }
+    }
+    await chrome.storage.local.set({ openTabsSnapshot: snapshot });
+  } catch {}
+}
+
+// 串行写队列：普通单标签关闭时使用，避免并发写入互相覆盖
+let writeQueue = Promise.resolve();
+
+function enqueueTabRecord(tabId) {
+  writeQueue = writeQueue.then(async () => {
+    // 从快照里取该标签信息（此时快照还未更新）
+    const r = await chrome.storage.local.get('openTabsSnapshot');
+    const snapshot = r.openTabsSnapshot || {};
+    const info = snapshot[`tab_${tabId}`];
+    if (!info || !info.url) return;
+
+    const settings = await getSettings();
+    const blocked = settings.blockedUrls || [];
+    if (blocked.some(p => p && info.url.includes(p))) return;
+
+    const list = await getClosedTabs();
+    if (settings.deduplicateUrls) {
+      const idx = list.findIndex(t => t.url === info.url);
+      if (idx !== -1) list.splice(idx, 1);
+    }
+    list.unshift({
+      id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random()}`,
+      url: info.url,
+      title: info.title,
+      favIconUrl: info.favIconUrl,
+      closedAt: Date.now(),
+    });
+    const max = settings.maxStored || DEFAULTS.maxStored;
+    if (list.length > max) list.length = max;
+    await chrome.storage.local.set({ closedTabs: list });
+  }).catch(() => {});
 }
 
 async function updateBadge() {
@@ -84,21 +118,34 @@ async function updateBadge() {
   chrome.action.setBadgeBackgroundColor({ color: '#3b82f6' });
 }
 
-// 把当前所有已打开标签补进缓存，避免 SW 首次启动前打开的标签丢失信息
-async function primeCache() {
-  try {
-    const tabs = await chrome.tabs.query({});
-    await Promise.all(tabs.map(cacheTab));
-  } catch {}
+// 启动时：把上次快照补录为关闭历史，再重建当前快照
+async function onBrowserStart() {
+  const r = await chrome.storage.local.get('openTabsSnapshot');
+  const snapshot = r.openTabsSnapshot || {};
+  if (Object.keys(snapshot).length) {
+    await flushSnapshotToHistory(snapshot);
+    await chrome.storage.local.remove('openTabsSnapshot');
+  }
+  await syncOpenTabsSnapshot();
   updateBadge();
 }
 
-chrome.tabs.onCreated.addListener(cacheTab);
-chrome.tabs.onUpdated.addListener((_tabId, _changeInfo, tab) => cacheTab(tab));
-chrome.tabs.onRemoved.addListener(recordClosedTab);
+chrome.tabs.onCreated.addListener(syncOpenTabsSnapshot);
+chrome.tabs.onUpdated.addListener((_id, changeInfo) => {
+  if (changeInfo.url || changeInfo.title) syncOpenTabsSnapshot();
+});
+chrome.tabs.onRemoved.addListener((tabId) => {
+  enqueueTabRecord(tabId);
+  // 关闭后同步更新快照，把该标签从快照中移除
+  syncOpenTabsSnapshot();
+});
 
-chrome.runtime.onInstalled.addListener(primeCache);
-chrome.runtime.onStartup.addListener(primeCache);
+chrome.runtime.onInstalled.addListener(async () => {
+  await chrome.storage.local.remove('openTabsSnapshot');
+  await syncOpenTabsSnapshot();
+  updateBadge();
+});
+chrome.runtime.onStartup.addListener(onBrowserStart);
 
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.closedTabs || changes.settings) updateBadge();
